@@ -2,9 +2,10 @@ import tempfile
 import os
 import shutil
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from logseqtoobsidian.convert_notes import (
+    copy_journals,
     is_markdown_file,
     is_empty_markdown_file,
     get_namespace_hierarchy,
@@ -228,6 +229,73 @@ class TestUpdateLinksAndTags(unittest.TestCase):
             self.args, line, self.name_to_path, self.curr_path
         )
         self.assertEqual(result, expected)
+
+
+class TestCopyJournals(unittest.TestCase):
+    def setUp(self):
+        self.args = type('', (), {})()  # Create a simple object to hold arguments
+        self.args.journal_dashes = False
+        self.old_journals = "old_journals"
+        self.new_journals = "new_journals"
+        self.old_to_new_paths = {}
+        self.new_to_old_paths = {}
+        self.new_paths = set()
+        self.pages_that_were_empty = set()
+        self.old_pagenames_to_new_paths = {}
+
+    @patch('os.listdir')
+    @patch('os.path.isfile')
+    @patch('shutil.copyfile')
+    @patch('logseqtoobsidian.convert_notes.is_empty_markdown_file')
+    def test_copy_non_empty_file(self, mock_is_empty, mock_copyfile, mock_isfile, mock_listdir):
+        mock_listdir.return_value = ['file1.md']
+        mock_isfile.return_value = True
+        mock_is_empty.return_value = False
+
+        copy_journals(self.args, self.old_journals, self.new_journals, self.old_to_new_paths,
+                      self.new_to_old_paths, self.new_paths, self.pages_that_were_empty,
+                      self.old_pagenames_to_new_paths)
+
+        self.assertIn(os.path.join(self.old_journals, 'file1.md'), self.old_to_new_paths)
+        self.assertIn(os.path.join(self.new_journals, 'file1.md'), self.new_to_old_paths)
+        self.assertIn(os.path.join(self.new_journals, 'file1.md'), self.new_paths)
+        self.assertIn('file1', self.old_pagenames_to_new_paths)
+        mock_copyfile.assert_called_once()
+
+    @patch('os.listdir')
+    @patch('os.path.isfile')
+    @patch('shutil.copyfile')
+    @patch('logseqtoobsidian.convert_notes.is_empty_markdown_file')
+    def test_skip_empty_file(self, mock_is_empty, mock_copyfile, mock_isfile, mock_listdir):
+        mock_listdir.return_value = ['file2.md']
+        mock_isfile.return_value = True
+        mock_is_empty.return_value = True
+
+        copy_journals(self.args, self.old_journals, self.new_journals, self.old_to_new_paths,
+                      self.new_to_old_paths, self.new_paths, self.pages_that_were_empty,
+                      self.old_pagenames_to_new_paths)
+
+        self.assertIn('file2.md', self.pages_that_were_empty)
+        mock_copyfile.assert_not_called()
+
+    @patch('os.listdir')
+    @patch('os.path.isfile')
+    @patch('shutil.copyfile')
+    @patch('logseqtoobsidian.convert_notes.is_empty_markdown_file')
+    def test_journal_dashes(self, mock_is_empty, mock_copyfile, mock_isfile, mock_listdir):
+        self.args.journal_dashes = True
+        mock_listdir.return_value = ['file_with_underscores.md']
+        mock_isfile.return_value = True
+        mock_is_empty.return_value = False
+
+        copy_journals(self.args, self.old_journals, self.new_journals, self.old_to_new_paths,
+                      self.new_to_old_paths, self.new_paths, self.pages_that_were_empty,
+                      self.old_pagenames_to_new_paths)
+
+        expected_new_fpath = os.path.join(self.new_journals, 'file-with-underscores.md')
+        self.assertIn(expected_new_fpath, self.new_to_old_paths)
+        self.assertIn('file-with-underscores', self.old_pagenames_to_new_paths)
+        mock_copyfile.assert_called_once_with(os.path.join(self.old_journals, 'file_with_underscores.md'), expected_new_fpath)
 
 
 if __name__ == "__main__":

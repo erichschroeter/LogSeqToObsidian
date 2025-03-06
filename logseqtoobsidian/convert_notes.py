@@ -366,3 +366,36 @@ def unencode_filenames_for_links(old_str: str) -> str:
 
     return new_str
 
+def copy_journals(args,
+                  old_journals: str,
+                  new_journals: str,
+                  old_to_new_paths: dict,
+                  new_to_old_paths: dict,
+                  new_paths: set,
+                  pages_that_were_empty: dict,
+                  old_pagenames_to_new_paths: dict):
+    for fname in os.listdir(old_journals):
+        fpath = os.path.join(old_journals, fname)
+        logging.info("Now copying the journal page: " + fpath)
+        if os.path.isfile(fpath):
+            if not is_empty_markdown_file(fpath):
+                new_fpath = new_journals
+
+                if args.journal_dashes:
+                    new_fpath = os.path.join(new_journals, fname.replace("_","-"))
+                else:
+                    new_fpath = os.path.join(new_journals, fname)
+                
+                logging.info(f'copying "{fpath}" to "{new_fpath}"')
+                shutil.copyfile(fpath, new_fpath)
+                old_to_new_paths[fpath] = new_fpath
+                new_to_old_paths[new_fpath] = fpath
+                new_paths.add(new_fpath)
+
+                newfile = os.path.splitext(fname)[0]
+                old_pagenames_to_new_paths[newfile] = new_fpath
+
+                if args.journal_dashes:
+                    old_pagenames_to_new_paths[newfile.replace("_","-")] = new_fpath
+            else:
+                pages_that_were_empty.add(fname)

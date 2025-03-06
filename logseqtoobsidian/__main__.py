@@ -5,7 +5,7 @@ import re
 import shutil
 
 import logseqtoobsidian.convert_notes
-from logseqtoobsidian.convert_notes import add_bullet_before_indented_image, add_space_after_hyphen_that_ends_line, convert_empty_line, convert_spaces_to_tabs, convert_todos, escape_lt_gt, fix_escapes, get_namespace_hierarchy, is_collapsed_line, is_empty_markdown_file, is_markdown_file, prepend_code_block, remove_block_links_embeds, unencode_filenames_for_links, unindent_once, update_assets, update_image_dimensions, update_links_and_tags
+from logseqtoobsidian.convert_notes import add_bullet_before_indented_image, add_space_after_hyphen_that_ends_line, convert_empty_line, convert_spaces_to_tabs, convert_todos, copy_journals, escape_lt_gt, fix_escapes, get_namespace_hierarchy, is_collapsed_line, is_empty_markdown_file, is_markdown_file, prepend_code_block, remove_block_links_embeds, unencode_filenames_for_links, unindent_once, update_assets, update_image_dimensions, update_links_and_tags
 
 class CustomFormatter(logging.Formatter):
     """Logging Formatter to add colors and count warning / errors"""
@@ -96,7 +96,7 @@ def main():
     if args.overwrite_output and os.path.exists(new_base):
         shutil.rmtree(new_base)
 
-    os.makedirs(new_base, exist_ok=False)
+    os.makedirs(new_base, exist_ok=args.overwrite_output)
 
     # Copy journals pages to their own subfolder
     old_journals = os.path.join(old_base, "journals")
@@ -106,28 +106,14 @@ def main():
     os.mkdir(new_journals)
 
     logging.info("Now beginning to copy the journal pages")
-    for fname in os.listdir(old_journals):
-        fpath = os.path.join(old_journals, fname)
-        logging.info("Now copying the journal page: " + fpath)
-        if os.path.isfile(fpath):
-            if not is_empty_markdown_file(fpath):
-                new_fpath = os.path.join(new_journals, fname)
-                
-                if args.journal_dashes:
-                    new_fpath = new_fpath.replace("_","-")
-
-                shutil.copyfile(fpath, new_fpath)
-                old_to_new_paths[fpath] = new_fpath
-                new_to_old_paths[new_fpath] = fpath
-                new_paths.add(new_fpath)
-
-                newfile = os.path.splitext(fname)[0]
-                old_pagenames_to_new_paths[newfile] = new_fpath
-
-                if args.journal_dashes:
-                    old_pagenames_to_new_paths[newfile.replace("_","-")] = new_fpath
-            else:
-                pages_that_were_empty.add(fname)
+    copy_journals(args,
+                  old_journals,
+                  new_journals,
+                  old_to_new_paths,
+                  new_to_old_paths,
+                  new_paths,
+                  pages_that_were_empty,
+                  old_pagenames_to_new_paths)
 
     # Copy other markdown files to the new base folder, creating subfolders for namespaces
     old_pages = os.path.join(old_base, "pages")
