@@ -188,14 +188,14 @@ def update_assets(line: str, old_path: str, new_path: str):
         )
         new_asset_dir = os.path.dirname(new_asset_path)
         os.makedirs(new_asset_dir, exist_ok=True)
-        print("Old note path: " + old_path)
-        print("Old asset path: " + old_asset_path)
-        print("New asset path: " + new_asset_path)
+        logging.debug("Old note path: " + old_path)
+        logging.debug("Old asset path: " + old_asset_path)
+        logging.debug("New asset path: " + new_asset_path)
         try:
             shutil.copyfile(old_asset_path, new_asset_path)
             new_relpath = os.path.relpath(new_asset_path, os.path.dirname(new_path))
         except FileNotFoundError:
-            print(
+            logging.warning(
                 "Warning: copying the asset from "
                 + old_asset_path
                 + " to "
