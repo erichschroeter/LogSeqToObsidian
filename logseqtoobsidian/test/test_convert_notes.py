@@ -25,6 +25,7 @@ from logseqtoobsidian.convert_notes import (
     unencode_filenames_for_links,
 )
 
+
 class TestConvertNotes(unittest.TestCase):
 
     def test_is_markdown_file(self):
@@ -38,18 +39,36 @@ class TestConvertNotes(unittest.TestCase):
         self.assertTrue(is_empty_markdown_file(tmp_path))
         os.remove(tmp_path)
 
-    def test_get_namespace_hierarchy(self):
+    def test_get_namespace_hierarchy_when_ignore_dot_for_namespace_false(self):
         args = Mock()
         args.ignore_dot_for_namespaces = False
-        self.assertEqual(get_namespace_hierarchy(args, "A%2FB%2FC.md"), ["A", "B", "C.md"])
-        self.assertEqual(get_namespace_hierarchy(args, "A___B___C.md"), ["A", "B", "C.md"])
+        self.assertEqual(
+            get_namespace_hierarchy(args, "A%2FB%2FC.md"), ["A", "B", "C.md"]
+        )
+        self.assertEqual(
+            get_namespace_hierarchy(args, "A___B___C.md"), ["A", "B", "C.md"]
+        )
         self.assertEqual(get_namespace_hierarchy(args, "A.B.C.md"), ["A", "B", "C.md"])
+
+    def test_get_namespace_hierarchy_when_ignore_dot_for_namespace_true(self):
+        args = Mock()
+        args.ignore_dot_for_namespaces = True
+        self.assertEqual(
+            get_namespace_hierarchy(args, "A%2FB%2FC.md"), ["A", "B", "C.md"]
+        )
+        self.assertEqual(
+            get_namespace_hierarchy(args, "A___B___C.md"), ["A", "B", "C.md"]
+        )
+        self.assertEqual(get_namespace_hierarchy(args, "A.B.C.md"), ["A.B.C.md"])
 
     def test_update_links_and_tags(self):
         name_to_path = {"test": "/path/to/test.md"}
         line = "This is a link to [[test]]."
         args = None
-        self.assertEqual(update_links_and_tags(args, line, name_to_path, "/current/path"), "This is a link to [test](../path/to/test.md).")
+        self.assertEqual(
+            update_links_and_tags(args, line, name_to_path, "/current/path"),
+            "This is a link to [test](../path/to/test.md).",
+        )
 
     def test_update_assets(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -72,7 +91,9 @@ class TestConvertNotes(unittest.TestCase):
 
     def test_remove_block_links_embeds(self):
         line = "This is a block link ((12345)) and an embed {{embed 12345}}."
-        self.assertEqual(remove_block_links_embeds(line), "This is a block link  and an embed .")
+        self.assertEqual(
+            remove_block_links_embeds(line), "This is a block link  and an embed ."
+        )
 
     def test_convert_spaces_to_tabs(self):
         line = "    indented line"
@@ -84,11 +105,16 @@ class TestConvertNotes(unittest.TestCase):
 
     def test_add_space_after_hyphen_that_ends_line(self):
         line = "line ends with hyphen-"
-        self.assertEqual(add_space_after_hyphen_that_ends_line(line), "line ends with hyphen- ")
+        self.assertEqual(
+            add_space_after_hyphen_that_ends_line(line), "line ends with hyphen- "
+        )
 
     def test_prepend_code_block(self):
         line = "\t- ```python"
-        self.assertEqual(prepend_code_block(line), ["\t- python code block below:\n", "\t```python\n"])
+        self.assertEqual(
+            prepend_code_block(line),
+            ["\t- python code block below:\n", "\t```python\n"],
+        )
 
     def test_escape_lt_gt(self):
         line = "This is a <test> line."
@@ -102,7 +128,9 @@ class TestConvertNotes(unittest.TestCase):
 
     def test_add_bullet_before_indented_image(self):
         line = "\t![image](image.png)"
-        self.assertEqual(add_bullet_before_indented_image(line), "\t- ![image](image.png)")
+        self.assertEqual(
+            add_bullet_before_indented_image(line), "\t- ![image](image.png)"
+        )
 
     def test_unindent_once(self):
         line = "\tindented line"
@@ -118,5 +146,6 @@ class TestConvertNotes(unittest.TestCase):
         old_str = "filename%3Aexample"
         self.assertEqual(unencode_filenames_for_links(old_str), "filename:example")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
