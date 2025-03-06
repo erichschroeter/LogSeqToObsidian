@@ -20,7 +20,7 @@ A basic Python script that converts LogSeq's markdown files to a style that play
 
 ### Usage
 
-`python convert_notes.py --logseq /path/to/logseq/graph --output /path/to/output/folder`
+`python -m logseqtoobsidian --logseq /path/to/logseq/graph --output /path/to/output/folder`
 
 Flags:
 
