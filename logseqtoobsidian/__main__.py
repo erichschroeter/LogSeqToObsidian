@@ -1,4 +1,3 @@
-
 import argparse
 import logging
 import os
@@ -8,9 +7,31 @@ import shutil
 import logseqtoobsidian.convert_notes
 from logseqtoobsidian.convert_notes import add_bullet_before_indented_image, add_space_after_hyphen_that_ends_line, convert_empty_line, convert_spaces_to_tabs, convert_todos, escape_lt_gt, fix_escapes, get_namespace_hierarchy, is_collapsed_line, is_empty_markdown_file, is_markdown_file, prepend_code_block, remove_block_links_embeds, unencode_filenames_for_links, unindent_once, update_assets, update_image_dimensions, update_links_and_tags
 
+class CustomFormatter(logging.Formatter):
+    """Logging Formatter to add colors and count warning / errors"""
+
+    # Define the color codes
+    COLORS = {
+        'DEBUG': '\033[94m',  # Blue
+        'INFO': '\033[92m',   # Green
+        'WARNING': '\033[93m',# Yellow
+        'ERROR': '\033[91m',  # Red
+        'RESET': '\033[0m'    # Reset
+    }
+
+    def format(self, record):
+        log_color = self.COLORS.get(record.levelname, self.COLORS['RESET'])
+        reset_color = self.COLORS['RESET']
+        record.levelname = f"{log_color}{record.levelname}{reset_color}"
+        return super().format(record)
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(message)s")
+    # Set up logging with custom formatter
+    handler = logging.StreamHandler()
+    handler.setFormatter(CustomFormatter("%(levelname)s: %(message)s"))
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
 
     parser = argparse.ArgumentParser()
 
@@ -66,7 +87,6 @@ def main():
     new_paths = set()
     pages_that_were_empty = set()
     old_pagenames_to_new_paths = {}
-
 
     # First loop: copy files to their new location, populate the maps and list of paths
 
