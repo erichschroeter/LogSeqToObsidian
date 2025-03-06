@@ -61,15 +61,6 @@ class TestConvertNotes(unittest.TestCase):
         )
         self.assertEqual(get_namespace_hierarchy(args, "A.B.C.md"), ["A.B.C.md"])
 
-    def test_update_links_and_tags(self):
-        name_to_path = {"test": "/path/to/test.md"}
-        line = "This is a link to [[test]]."
-        args = None
-        self.assertEqual(
-            update_links_and_tags(args, line, name_to_path, "/current/path"),
-            "This is a link to [test](../path/to/test.md).",
-        )
-
     def test_update_assets(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             old_path = os.path.join(tmpdir, "old.md")
@@ -145,6 +136,98 @@ class TestConvertNotes(unittest.TestCase):
     def test_unencode_filenames_for_links(self):
         old_str = "filename%3Aexample"
         self.assertEqual(unencode_filenames_for_links(old_str), "filename:example")
+
+
+class TestUpdateLinksAndTags(unittest.TestCase):
+    def setUp(self):
+        self.args = type("", (), {})()  # Create a simple object to hold arguments
+        self.args.convert_tags_to_links = False
+        self.name_to_path = {
+            "This/Type/OfLink": "/path/to/This/Type/OfLink",
+            "Another/Link": "/path/to/Another/Link",
+        }
+        self.curr_path = "/path/to/current/file"
+
+    def test_reformat_dates_in_links_with_convert_tags_to_links_true(self):
+        self.args.convert_tags_to_links = True
+        line = "[[Aug 24th, 2022]]"
+        expected = "[[2022-08-24]]"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_reformat_dates_in_links_with_convert_tags_to_links_false(self):
+        self.args.convert_tags_to_links = False
+        line = "[[Aug 24th, 2022]]"
+        expected = "#2022-08-24"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_fix_long_tag_convert_to_links(self):
+        self.args.convert_tags_to_links = True
+        line = "#[[this type of tag]]"
+        expected = "[[this type of tag]]"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_fix_long_tag_convert_to_underscore(self):
+        self.args.convert_tags_to_links = False
+        line = "#[[this type of tag]]"
+        expected = "#this_type_of_tag"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_convert_tag_to_link(self):
+        self.args.convert_tags_to_links = True
+        line = "#tag"
+        expected = "[[tag]]"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_fix_link_existing_page_with_convert_tags_to_links_true(self):
+        self.args.convert_tags_to_links = True
+        line = "[[This/Type/NamespaceLink]]"
+        expected = "[[This/Type/NamespaceLink]]"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_fix_link_existing_page_with_convert_tags_to_links_false(self):
+        self.args.convert_tags_to_links = False
+        line = "[[This/Type/NamespaceLink]]"
+        expected = "#This/Type/NamespaceLink"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_fix_link_non_existing_page_convert_to_links(self):
+        self.args.convert_tags_to_links = True
+        line = "[[NonExistingPage]]"
+        expected = "[[NonExistingPage]]"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
+
+    def test_fix_link_non_existing_page_convert_to_tags(self):
+        self.args.convert_tags_to_links = False
+        line = "[[NonExistingPage]]"
+        expected = "#NonExistingPage"
+        result = update_links_and_tags(
+            self.args, line, self.name_to_path, self.curr_path
+        )
+        self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":
