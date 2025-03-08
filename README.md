@@ -1,16 +1,17 @@
 # LogSeqToObsidian
 
-LogSeq and Obsidian: are two (awesome) note taking tools.
+[LogSeq](https://logseq.com/) and [Obsidian](https://obsidian.md/): are two (awesome) note taking tools.
 
-I: am a flawed human with a penchant for flitting between note taking apps.
+I am a flawed human with a penchant for flitting between note taking apps.
 
 These: are a couple of files to help me migrate from LogSeq to Obsidian.
 
-**Please: backup all of your files before trying the migration script on your own data. The script is highly experimental.**
+> [!WARNING]
+> Please backup all of your files before trying the migration script on your own data. The script is highly experimental.**
 
 ## `bonofix-snippet.css`
 
-A small CSS snippet to help Obsidian look more like a mix of the (LogSeq Bonofix Theme)[https://github.com/Sansui233/logseq-bonofix-theme] and Typora
+A small CSS snippet to help Obsidian look more like a mix of the [LogSeq Bonofix Theme](https://github.com/Sansui233/logseq-bonofix-theme) and Typora.
 
 Install the Minimal theme, and then paste it in your snippets folder and enable it. Doesn't do much more than (what I consider) the basics - any contributions welcome.
 
@@ -20,9 +21,11 @@ A basic Python script that converts LogSeq's markdown files to a style that play
 
 ### Usage
 
-`python -m logseqtoobsidian --logseq /path/to/logseq/graph --output /path/to/output/folder`
+```shell
+python -m logseqtoobsidian --logseq /path/to/logseq/graph --output /path/to/output/folder
+```
 
-Flags:
+#### Flags:
 
 - Add the `--overwrite_output` flag if you want any existing folder at the output path to be overwritten
 - Add the `--unindent_once` flag if you want all lines to be unindented once. If you do this, the base level of indentation will be paragraph-style text with no bullet points
@@ -33,12 +36,12 @@ Flags:
 
 ### Further information
 
-Known assumptions:
+#### Known assumptions:
 
 - Dots in the logseq filename are assumed to indicate namespaces
 - `<` and `>` characters are assumed to be part of text, and therefore escaped so that they display correctly in Obsidian
 
-What this script does:
+#### What this script does:
 
 - Creates a folder/subfolder hierarchy based on namespaces, copies notes appropriately, and updates links between notes
 - Links to notes that have not yet been created are replaced with tags
@@ -51,14 +54,14 @@ What this script does:
   Taglinks:
   - [[list]]
   - [[of]]
-  - "[[tags with spaces]]
+  - [[tags with spaces]]
   ```
 - If a code block has been embedded inside a list, prepends a line - without this, the code block does not display correctly
 - Minor reformatting to prettify notes: escapes `<` and `>` characters, replaces 2-4 spaces with a tab, ignores Logseq artefacts like `collapsed:: true`
 - Use `--journal_dashes` to convert journal file entries from the format `Jan 2,2023.md` to the default Obsidian format `2023-01-02.md`
 - Any files found with a `%3A` in the name (html encoded colon character `:`) to a `.` character instead.
 
-What this script does not do:
+#### What this script does not do:
 
 - Process page properties, and use them for finding namespaces
 - Get file copier to work with subfolders in logseq (right now only copies pages in the base directory)
