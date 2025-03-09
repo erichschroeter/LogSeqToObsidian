@@ -402,7 +402,8 @@ def copy_journals(
                     new_fpath = os.path.join(new_journals, fname)
 
                 logging.info(f'copying "{fpath}" to "{new_fpath}"')
-                shutil.copyfile(fpath, new_fpath)
+                if not args.dryrun:
+                    shutil.copyfile(fpath, new_fpath)
                 old_to_new_paths[fpath] = new_fpath
                 new_to_old_paths[new_fpath] = fpath
                 new_paths.add(new_fpath)
@@ -414,3 +415,41 @@ def copy_journals(
                     old_pagenames_to_new_paths[newfile.replace("_", "-")] = new_fpath
             else:
                 pages_that_were_empty.add(fname)
+
+
+def copy_pages(
+    args,
+    old_pages: str,
+    new_base: str,
+    old_to_new_paths: dict,
+    new_to_old_paths: dict,
+    new_paths: set,
+    pages_that_were_empty: dict,
+    old_pagenames_to_new_paths: dict
+    ):
+    for fname in os.listdir(old_pages):
+        fpath = os.path.join(old_pages, fname)
+        logging.info("Now copying the non-journal page: " + fpath)
+        if os.path.isfile(fpath) and is_markdown_file(fpath):
+            hierarchy = get_namespace_hierarchy(args, fname)
+            hierarchical_pagename = "/".join(hierarchy)
+            if is_empty_markdown_file(fpath):
+                pages_that_were_empty.add(fname)
+            else:
+                new_fpath = os.path.join(new_base, *hierarchy)
+                new_fpath = fix_escapes(new_fpath)
+                logging.info("Destination path: " + new_fpath)
+                new_dirname = os.path.split(new_fpath)[0]
+                if not args.dryrun:
+                    os.makedirs(new_dirname, exist_ok=True)
+                    shutil.copyfile(fpath, new_fpath)
+                old_to_new_paths[fpath] = new_fpath
+                new_to_old_paths[new_fpath] = fpath
+                new_paths.add(new_fpath)
+
+                old_pagename = os.path.splitext(hierarchical_pagename)[0]
+                old_pagenames_to_new_paths[old_pagename] = new_fpath
+                # Add mapping of unencoded filename for links
+                old_pagenames_to_new_paths[
+                    unencode_filenames_for_links(old_pagename)
+                ] = new_fpath

@@ -12,6 +12,7 @@ from logseqtoobsidian.convert_notes import (
     convert_spaces_to_tabs,
     convert_todos,
     copy_journals,
+    copy_pages,
     escape_lt_gt,
     fix_escapes,
     get_namespace_hierarchy,
@@ -62,6 +63,12 @@ def main():
     )
     parser.add_argument(
         "--output", help="base directory where output should go", required=True
+    )
+    parser.add_argument(
+        "--dryrun",
+        help="don't actually do anything, just see what would happen",
+        default=False,
+        action="store_true",
     )
     parser.add_argument(
         "--overwrite_output",
@@ -148,31 +155,16 @@ def main():
     assert os.path.isdir(old_pages)
 
     logging.info("Now beginning to copy the non-journal pages")
-    for fname in os.listdir(old_pages):
-        fpath = os.path.join(old_pages, fname)
-        logging.info("Now copying the non-journal page: " + fpath)
-        if os.path.isfile(fpath) and is_markdown_file(fpath):
-            hierarchy = get_namespace_hierarchy(args, fname)
-            hierarchical_pagename = "/".join(hierarchy)
-            if is_empty_markdown_file(fpath):
-                pages_that_were_empty.add(fname)
-            else:
-                new_fpath = os.path.join(new_base, *hierarchy)
-                new_fpath = fix_escapes(new_fpath)
-                logging.info("Destination path: " + new_fpath)
-                new_dirname = os.path.split(new_fpath)[0]
-                os.makedirs(new_dirname, exist_ok=True)
-                shutil.copyfile(fpath, new_fpath)
-                old_to_new_paths[fpath] = new_fpath
-                new_to_old_paths[new_fpath] = fpath
-                new_paths.add(new_fpath)
-
-                old_pagename = os.path.splitext(hierarchical_pagename)[0]
-                old_pagenames_to_new_paths[old_pagename] = new_fpath
-                # Add mapping of unencoded filename for links
-                old_pagenames_to_new_paths[
-                    unencode_filenames_for_links(old_pagename)
-                ] = new_fpath
+    copy_pages(
+        args,
+        old_pages,
+        new_base,
+        old_to_new_paths,
+        new_to_old_paths,
+        new_paths,
+        pages_that_were_empty,
+        old_pagenames_to_new_paths,
+    )
 
     # Second loop: for each new file, reformat its content appropriately
     for fpath in new_paths:
