@@ -62,7 +62,7 @@ class TestConvertNotes(unittest.TestCase):
         )
         self.assertEqual(get_namespace_hierarchy(args, "A.B.C.md"), ["A.B.C.md"])
 
-    def test_update_assets(self):
+    def test_update_assets_embed(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             old_path = os.path.join(tmpdir, "old.md")
             new_path = os.path.join(tmpdir, "new.md")
@@ -72,6 +72,17 @@ class TestConvertNotes(unittest.TestCase):
             line = "![image](image.png)"
             updated_line = update_assets(line, old_path, new_path)
             self.assertIn("attachments/image.png", updated_line)
+
+    def test_update_assets_nonembed(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_path = os.path.join(tmpdir, "script.py.md")
+            new_path = os.path.join(tmpdir, "script.py.md")
+            asset_path = os.path.join(tmpdir, "script.py")
+            with open(asset_path, "w") as f:
+                f.write("print('hello')")
+            line = "[script.py](script.py)"
+            updated_line = update_assets(line, old_path, new_path)
+            self.assertIn("attachments/script.py", updated_line)
 
     def test_update_image_dimensions(self):
         line = "![image](image.png){:height 319, :width 568}"
@@ -143,6 +154,7 @@ class TestUpdateLinksAndTags(unittest.TestCase):
     def setUp(self):
         self.args = type("", (), {})()  # Create a simple object to hold arguments
         self.args.convert_tags_to_links = False
+        self.args.dryrun = False
         self.name_to_path = {
             "This/Type/OfLink": "/path/to/This/Type/OfLink",
             "Another/Link": "/path/to/Another/Link",
@@ -235,6 +247,7 @@ class TestCopyJournals(unittest.TestCase):
     def setUp(self):
         self.args = type('', (), {})()  # Create a simple object to hold arguments
         self.args.journal_dashes = False
+        self.args.dryrun = False
         self.old_journals = "old_journals"
         self.new_journals = "new_journals"
         self.old_to_new_paths = {}
