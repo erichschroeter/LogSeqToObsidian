@@ -5,25 +5,47 @@ import re
 import shutil
 
 import logseqtoobsidian.convert_notes
-from logseqtoobsidian.convert_notes import add_bullet_before_indented_image, add_space_after_hyphen_that_ends_line, convert_empty_line, convert_spaces_to_tabs, convert_todos, copy_journals, escape_lt_gt, fix_escapes, get_namespace_hierarchy, is_collapsed_line, is_empty_markdown_file, is_markdown_file, prepend_code_block, remove_block_links_embeds, unencode_filenames_for_links, unindent_once, update_assets, update_image_dimensions, update_links_and_tags
+from logseqtoobsidian.convert_notes import (
+    add_bullet_before_indented_image,
+    add_space_after_hyphen_that_ends_line,
+    convert_empty_line,
+    convert_spaces_to_tabs,
+    convert_todos,
+    copy_journals,
+    escape_lt_gt,
+    fix_escapes,
+    get_namespace_hierarchy,
+    is_collapsed_line,
+    is_empty_markdown_file,
+    is_markdown_file,
+    prepend_code_block,
+    remove_block_links_embeds,
+    unencode_filenames_for_links,
+    unindent_once,
+    update_assets,
+    update_image_dimensions,
+    update_links_and_tags,
+)
+
 
 class CustomFormatter(logging.Formatter):
     """Logging Formatter to add colors and count warning / errors"""
 
     # Define the color codes
     COLORS = {
-        'DEBUG': '\033[94m',  # Blue
-        'INFO': '\033[92m',   # Green
-        'WARNING': '\033[93m',# Yellow
-        'ERROR': '\033[91m',  # Red
-        'RESET': '\033[0m'    # Reset
+        "DEBUG": "\033[94m",  # Blue
+        "INFO": "\033[92m",  # Green
+        "WARNING": "\033[93m",  # Yellow
+        "ERROR": "\033[91m",  # Red
+        "RESET": "\033[0m",  # Reset
     }
 
     def format(self, record):
-        log_color = self.COLORS.get(record.levelname, self.COLORS['RESET'])
-        reset_color = self.COLORS['RESET']
+        log_color = self.COLORS.get(record.levelname, self.COLORS["RESET"])
+        reset_color = self.COLORS["RESET"]
         record.levelname = f"{log_color}{record.levelname}{reset_color}"
         return super().format(record)
+
 
 def main():
     # Set up logging with custom formatter
@@ -35,7 +57,9 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--logseq", help="base directory of logseq graph", required=True)
+    parser.add_argument(
+        "--logseq", help="base directory of logseq graph", required=True
+    )
     parser.add_argument(
         "--output", help="base directory where output should go", required=True
     )
@@ -91,7 +115,9 @@ def main():
     # First loop: copy files to their new location, populate the maps and list of paths
 
     if not os.path.exists(old_base) or not os.path.isdir(old_base):
-        raise ValueError(f"The directory '{old_base}' does not exist or is not a valid directory.")
+        raise ValueError(
+            f"The directory '{old_base}' does not exist or is not a valid directory."
+        )
 
     if args.overwrite_output and os.path.exists(new_base):
         shutil.rmtree(new_base)
@@ -106,14 +132,16 @@ def main():
     os.mkdir(new_journals)
 
     logging.info("Now beginning to copy the journal pages")
-    copy_journals(args,
-                  old_journals,
-                  new_journals,
-                  old_to_new_paths,
-                  new_to_old_paths,
-                  new_paths,
-                  pages_that_were_empty,
-                  old_pagenames_to_new_paths)
+    copy_journals(
+        args,
+        old_journals,
+        new_journals,
+        old_to_new_paths,
+        new_to_old_paths,
+        new_paths,
+        pages_that_were_empty,
+        old_pagenames_to_new_paths,
+    )
 
     # Copy other markdown files to the new base folder, creating subfolders for namespaces
     old_pages = os.path.join(old_base, "pages")
@@ -140,9 +168,7 @@ def main():
                 new_paths.add(new_fpath)
 
                 old_pagename = os.path.splitext(hierarchical_pagename)[0]
-                old_pagenames_to_new_paths[
-                    old_pagename
-                ] = new_fpath
+                old_pagenames_to_new_paths[old_pagename] = new_fpath
                 # Add mapping of unencoded filename for links
                 old_pagenames_to_new_paths[
                     unencode_filenames_for_links(old_pagename)
@@ -169,10 +195,12 @@ def main():
                 # import ipdb; ipdb.set_trace()
                 newlines.append("---\n")
                 for key in front_matter:
-                    if (key.find("tags") >= 0 or key.find("Tags") >= 0) and args.tag_prop_to_taglist:
-                        # convert tags:: value1, #[[value 2]] 
+                    if (
+                        key.find("tags") >= 0 or key.find("Tags") >= 0
+                    ) and args.tag_prop_to_taglist:
+                        # convert tags:: value1, #[[value 2]]
                         # to
-                        # taglinks: 
+                        # taglinks:
                         #   - "[[value1]]"
                         #   - "[[value 2]]"
                         tags = front_matter[key].split(",")
@@ -180,9 +208,9 @@ def main():
                         newlines.append("Taglinks:\n")
                         for tag in tags:
                             tag = tag.strip()
-                            clean_tag = tag.replace("#","")
-                            clean_tag = clean_tag.replace("[[","")
-                            clean_tag = clean_tag.replace("]]","")
+                            clean_tag = tag.replace("#", "")
+                            clean_tag = clean_tag.replace("[[", "")
+                            clean_tag = clean_tag.replace("]]", "")
 
                             newlines.append('  - "[[' + clean_tag + ']]"' + "\n")
                     else:
@@ -193,7 +221,10 @@ def main():
                 ORIGINAL_LINE = line
 
                 # Update global state if this is the end of a code block
-                if logseqtoobsidian.convert_notes.__dict__["INSIDE_CODE_BLOCK"] and line == "```\n":
+                if (
+                    logseqtoobsidian.convert_notes.__dict__["INSIDE_CODE_BLOCK"]
+                    and line == "```\n"
+                ):
                     logseqtoobsidian.convert_notes.__dict__["INSIDE_CODE_BLOCK"] = False
 
                 # Ignore if the line if it's a collapsed:: true line
@@ -217,7 +248,9 @@ def main():
                     line = lines[1]
 
                 # Update links and tags
-                line = update_links_and_tags(args, line, old_pagenames_to_new_paths, fpath)
+                line = update_links_and_tags(
+                    args, line, old_pagenames_to_new_paths, fpath
+                )
 
                 # Update assets
                 line = update_assets(line, new_to_old_paths[fpath], fpath)
@@ -244,6 +277,7 @@ def main():
 
         with open(fpath, "w", encoding="utf-8") as f:
             f.writelines(newlines)
+
 
 if __name__ == "__main__":
     main()

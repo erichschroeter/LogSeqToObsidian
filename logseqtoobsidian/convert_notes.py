@@ -71,6 +71,7 @@ def get_namespace_hierarchy(args, fname: str) -> list[str]:
 
     return [fname]
 
+
 def update_links_and_tags(args, line: str, name_to_path: dict, curr_path: str) -> str:
     """Given a line of a logseq page, updates any links and tags in it
 
@@ -114,7 +115,7 @@ def update_links_and_tags(args, line: str, name_to_path: dict, curr_path: str) -
         s = match[0]
 
         if args.convert_tags_to_links:
-            s = s.replace("#","")
+            s = s.replace("#", "")
         else:
             s = s.replace(" ", "_")
             s = s.replace("[", "")
@@ -128,9 +129,9 @@ def update_links_and_tags(args, line: str, name_to_path: dict, curr_path: str) -
         s = match[0]
 
         if args.convert_tags_to_links:
-            s = s.replace("#","")
+            s = s.replace("#", "")
             s = "[[{}]]".format(s)
-        
+
         return s
 
     line = re.sub(r"#\w+", convert_tag_to_link, line)
@@ -157,7 +158,9 @@ def update_links_and_tags(args, line: str, name_to_path: dict, curr_path: str) -
             relpath.replace(" ", "%20")  # Obsidian does this
             relpath = fix_escapes(relpath)
             name = s.split("/")[-1]
-            s = "[" + name + "](" + relpath + ")"  # TOFIX We return the []() format of link here rather than [[]] format which we do elsewhere
+            s = (
+                "[" + name + "](" + relpath + ")"
+            )  # TOFIX We return the []() format of link here rather than [[]] format which we do elsewhere
             return s
 
     line = re.sub(r"\[\[.*?]]", fix_link, line)
@@ -205,7 +208,12 @@ def update_assets(line: str, old_path: str, new_path: str):
             new_relpath = old_relpath
             # import ipdb; ipdb.set_trace()
 
-        if os.path.splitext(old_asset_path)[1].lower() in [".png", ".jpg", ".jpeg", ".gif"]:
+        if os.path.splitext(old_asset_path)[1].lower() in [
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".gif",
+        ]:
             out.append("!")
         out.append("[" + name + "]")
         out.append("(" + new_relpath + ")")
@@ -294,6 +302,7 @@ def escape_lt_gt(line: str) -> str:
 
     return line
 
+
 def convert_todos(line: str) -> str:
     # Not if we're inside a code block
     if INSIDE_CODE_BLOCK:
@@ -303,6 +312,7 @@ def convert_todos(line: str) -> str:
     line = re.sub(r"^- TODO", "- [ ]", line)
 
     return line
+
 
 def add_bullet_before_indented_image(line: str) -> str:
     """If an image has been embedded on a new line created after shift+enter, it won't be indented in Obsidian"""
@@ -326,6 +336,7 @@ def unindent_once(line: str) -> str:
 
     return line
 
+
 def fix_escapes(old_str: str) -> str:
     """Given a filename, replace url escaped characters with an acceptable character for Obsidian filenames
 
@@ -335,18 +346,19 @@ def fix_escapes(old_str: str) -> str:
         return old_str
 
     replace_map = {
-        "%3A":".",
+        "%3A": ".",
     }
 
     new_str = old_str
 
     for escape_str in replace_map:
         if new_str.find(escape_str) >= 0:
-            new_str = new_str.replace(escape_str,replace_map[escape_str])
+            new_str = new_str.replace(escape_str, replace_map[escape_str])
 
     return new_str
 
-def unencode_filenames_for_links(old_str: str) -> str:    
+
+def unencode_filenames_for_links(old_str: str) -> str:
     """Given a filename, replace url escaped characters with the normal character as it would appear in a link
 
     :arg old_str old value
@@ -355,25 +367,28 @@ def unencode_filenames_for_links(old_str: str) -> str:
         return old_str
 
     replace_map = {
-        "%3A":":",
+        "%3A": ":",
     }
 
     new_str = old_str
 
     for escape_str in replace_map:
         if new_str.find(escape_str) >= 0:
-            new_str = new_str.replace(escape_str,replace_map[escape_str])
+            new_str = new_str.replace(escape_str, replace_map[escape_str])
 
     return new_str
 
-def copy_journals(args,
-                  old_journals: str,
-                  new_journals: str,
-                  old_to_new_paths: dict,
-                  new_to_old_paths: dict,
-                  new_paths: set,
-                  pages_that_were_empty: dict,
-                  old_pagenames_to_new_paths: dict):
+
+def copy_journals(
+    args,
+    old_journals: str,
+    new_journals: str,
+    old_to_new_paths: dict,
+    new_to_old_paths: dict,
+    new_paths: set,
+    pages_that_were_empty: dict,
+    old_pagenames_to_new_paths: dict,
+):
     for fname in os.listdir(old_journals):
         fpath = os.path.join(old_journals, fname)
         logging.info("Now copying the journal page: " + fpath)
@@ -382,10 +397,10 @@ def copy_journals(args,
                 new_fpath = new_journals
 
                 if args.journal_dashes:
-                    new_fpath = os.path.join(new_journals, fname.replace("_","-"))
+                    new_fpath = os.path.join(new_journals, fname.replace("_", "-"))
                 else:
                     new_fpath = os.path.join(new_journals, fname)
-                
+
                 logging.info(f'copying "{fpath}" to "{new_fpath}"')
                 shutil.copyfile(fpath, new_fpath)
                 old_to_new_paths[fpath] = new_fpath
@@ -396,6 +411,6 @@ def copy_journals(args,
                 old_pagenames_to_new_paths[newfile] = new_fpath
 
                 if args.journal_dashes:
-                    old_pagenames_to_new_paths[newfile.replace("_","-")] = new_fpath
+                    old_pagenames_to_new_paths[newfile.replace("_", "-")] = new_fpath
             else:
                 pages_that_were_empty.add(fname)
