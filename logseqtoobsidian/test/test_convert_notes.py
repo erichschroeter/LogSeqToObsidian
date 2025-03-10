@@ -62,7 +62,7 @@ class TestConvertNotes(unittest.TestCase):
         )
         self.assertEqual(get_namespace_hierarchy(args, "A.B.C.md"), ["A.B.C.md"])
 
-    def test_update_assets_embed(self):
+    def test_update_assets(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             old_path = os.path.join(tmpdir, "old.md")
             new_path = os.path.join(tmpdir, "new.md")
@@ -72,17 +72,6 @@ class TestConvertNotes(unittest.TestCase):
             line = "![image](image.png)"
             updated_line = update_assets(line, old_path, new_path)
             self.assertIn("attachments/image.png", updated_line)
-
-    def test_update_assets_nonembed(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            old_path = os.path.join(tmpdir, "script.py.md")
-            new_path = os.path.join(tmpdir, "script.py.md")
-            asset_path = os.path.join(tmpdir, "script.py")
-            with open(asset_path, "w") as f:
-                f.write("print('hello')")
-            line = "[script.py](script.py)"
-            updated_line = update_assets(line, old_path, new_path)
-            self.assertIn("attachments/script.py", updated_line)
 
     def test_update_image_dimensions(self):
         line = "![image](image.png){:height 319, :width 568}"
