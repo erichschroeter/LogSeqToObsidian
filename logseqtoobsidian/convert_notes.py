@@ -232,9 +232,7 @@ def update_assets(line: str, old_path: str, new_path: str):
         )
         new_asset_dir = os.path.dirname(new_asset_path)
         os.makedirs(new_asset_dir, exist_ok=True)
-        logging.debug("Old note path: " + old_path)
-        logging.debug("Old asset path: " + old_asset_path)
-        logging.debug("New asset path: " + new_asset_path)
+        logging.debug(f"copying: {old_asset_path} ->\n{' ' * len('DEBUG: copying: ')}{new_asset_path}")
         try:
             shutil.copyfile(old_asset_path, new_asset_path)
             new_relpath = os.path.relpath(new_asset_path, os.path.dirname(new_path))
@@ -427,7 +425,6 @@ def copy_journals(
 ):
     for fname in os.listdir(old_journals):
         fpath = os.path.join(old_journals, fname)
-        logging.info("Now copying the journal page: " + fpath)
         if os.path.isfile(fpath):
             if not is_empty_markdown_file(fpath):
                 new_fpath = new_journals
@@ -437,7 +434,7 @@ def copy_journals(
                 else:
                     new_fpath = os.path.join(new_journals, fname)
 
-                logging.info(f'copying "{fpath}" to "{new_fpath}"')
+                logging.info(f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}")
                 if not args.dryrun:
                     shutil.copyfile(fpath, new_fpath)
                 old_to_new_paths[fpath] = new_fpath
@@ -451,6 +448,8 @@ def copy_journals(
                     old_pagenames_to_new_paths[newfile.replace("_", "-")] = new_fpath
             else:
                 pages_that_were_empty.add(fname)
+        else:
+            logging.info(f"not copying: {fpath}")
 
 
 def copy_pages(
@@ -465,7 +464,6 @@ def copy_pages(
 ):
     for fname in os.listdir(old_pages):
         fpath = os.path.join(old_pages, fname)
-        logging.info("Now copying the non-journal page: " + fpath)
         if os.path.isfile(fpath) and is_markdown_file(fpath):
             hierarchy = get_namespace_hierarchy(args, fname)
             hierarchical_pagename = "/".join(hierarchy)
@@ -474,7 +472,7 @@ def copy_pages(
             else:
                 new_fpath = os.path.join(new_base, *hierarchy)
                 new_fpath = fix_escapes(new_fpath)
-                logging.info("Destination path: " + new_fpath)
+                logging.info(f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}")
                 new_dirname = os.path.split(new_fpath)[0]
                 if not args.dryrun:
                     os.makedirs(new_dirname, exist_ok=True)
@@ -489,3 +487,5 @@ def copy_pages(
                 old_pagenames_to_new_paths[
                     unencode_filenames_for_links(old_pagename)
                 ] = new_fpath
+        else:
+            logging.warning(f"not copying: {fpath}")

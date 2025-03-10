@@ -138,7 +138,7 @@ def main():
     new_journals = os.path.join(new_base, "journals")
     os.mkdir(new_journals)
 
-    logging.info("Now beginning to copy the journal pages")
+    logging.debug("Beginning to copy the journal pages")
     copy_journals(
         args,
         old_journals,
@@ -154,7 +154,7 @@ def main():
     old_pages = os.path.join(old_base, "pages")
     assert os.path.isdir(old_pages)
 
-    logging.info("Now beginning to copy the non-journal pages")
+    logging.debug("Beginning to copy the non-journal pages")
     copy_pages(
         args,
         old_pages,
