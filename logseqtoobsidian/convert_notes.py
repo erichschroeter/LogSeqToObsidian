@@ -66,8 +66,24 @@ def get_markdown_file_properties(fpath: str) -> tuple[dict, int]:
         title: test
         ---
     """
+    properties = {}
+    first_line_after = 0
 
-    raise NotImplementedError()
+    with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+        lines = f.readlines()
+
+        # Check for Logseq-style properties (key:: value)
+        for idx, line in enumerate(lines):
+            match = re.match(r"(.*?)::[\s]*(.*)", line)
+            if match is not None:
+                key = match[1].strip()
+                value = match[2].strip()
+                properties[key] = value
+                first_line_after = idx + 1
+            else:
+                break
+
+    return properties, first_line_after
 
 
 def get_namespace_hierarchy(args, fname: str) -> list[str]:

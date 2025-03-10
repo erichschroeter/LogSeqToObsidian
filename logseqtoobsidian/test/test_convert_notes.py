@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 from logseqtoobsidian.convert_notes import (
     copy_journals,
+    get_markdown_file_properties,
     is_markdown_file,
     is_empty_markdown_file,
     get_namespace_hierarchy,
@@ -38,6 +39,14 @@ class TestConvertNotes(unittest.TestCase):
             tmp.write(b"   \n")
             tmp_path = tmp.name
         self.assertTrue(is_empty_markdown_file(tmp_path))
+        os.remove(tmp_path)
+
+    def test_get_markdown_file_properties(self):
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
+            tmp.write(b"title:: An Example Title\n")
+            tmp.write(b"- Some text\n")
+            tmp_path = tmp.name
+        self.assertEqual(({"title": "An Example Title"}, 1), get_markdown_file_properties(tmp_path))
         os.remove(tmp_path)
 
     def test_get_namespace_hierarchy_when_ignore_dot_for_namespace_false(self):
