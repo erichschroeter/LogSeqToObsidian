@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import unittest
 
+
 class TestIntegration(unittest.TestCase):
 
     def setUp(self):
@@ -20,9 +21,17 @@ class TestIntegration(unittest.TestCase):
 
     def test_integration(self):
         result = subprocess.run(
-            ["python", "-m", "logseqtoobsidian.__main__", "--logseq", self.logseq_dir, "--output", self.output_dir],
+            [
+                "python",
+                "-m",
+                "logseqtoobsidian.__main__",
+                "--logseq",
+                self.logseq_dir,
+                "--output",
+                self.output_dir,
+            ],
             capture_output=True,
-            text=True
+            text=True,
         )
         if result.returncode != 0:
             print("STDOUT:", result.stdout)
@@ -31,5 +40,6 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(os.path.exists(self.output_dir))
         # Add more assertions as needed to verify the output
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()
