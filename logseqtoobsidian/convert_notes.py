@@ -9,6 +9,31 @@ import typing
 # Global state isn't always bad mmkay
 ORIGINAL_LINE = ""
 INSIDE_CODE_BLOCK = False
+OBSIDIAN_ACCEPTED_FILE_FORMATS = [
+    # ".md",
+    ".canvas",
+    ".avif",
+    ".bmp",
+    ".gif",
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".svg",
+    ".webp",
+    ".flac",
+    ".m4a",
+    ".mp3",
+    ".ogg",
+    ".wav",
+    ".webm",
+    ".3gp",
+    ".mkv",
+    ".mov",
+    ".mp4",
+    ".ogv",
+    ".webm",
+    ".pdf",
+]
 
 
 def is_markdown_file(fpath: str) -> bool:
@@ -208,19 +233,14 @@ def update_assets(line: str, old_path: str, new_path: str):
             new_relpath = old_relpath
             # import ipdb; ipdb.set_trace()
 
-        if os.path.splitext(old_asset_path)[1].lower() in [
-            ".png",
-            ".jpg",
-            ".jpeg",
-            ".gif",
-        ]:
+        if os.path.splitext(old_asset_path)[1].lower() in [OBSIDIAN_ACCEPTED_FILE_FORMATS]:
             out.append("!")
         out.append("[" + name + "]")
         out.append("(" + new_relpath + ")")
 
         return "".join(out)
 
-    line = re.sub(r"!?\[(.*?)]\((.*?)\)", fix_asset_embed, line)
+    line = re.sub(r"!\[(.*?)]\((.*?)\)", fix_asset_embed, line)
 
     return line
 
@@ -425,8 +445,8 @@ def copy_pages(
     new_to_old_paths: dict,
     new_paths: set,
     pages_that_were_empty: dict,
-    old_pagenames_to_new_paths: dict
-    ):
+    old_pagenames_to_new_paths: dict,
+):
     for fname in os.listdir(old_pages):
         fpath = os.path.join(old_pages, fname)
         logging.info("Now copying the non-journal page: " + fpath)
