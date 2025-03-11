@@ -487,5 +487,8 @@ def copy_pages(
                 old_pagenames_to_new_paths[
                     unencode_filenames_for_links(old_pagename)
                 ] = new_fpath
-        else:
-            logging.warning(f"not copying: {fpath}")
+        else:  # copy non-markdown files verbatim
+            new_fpath = os.path.join(new_base, os.path.basename(fpath))
+            logging.warning(f"copying: {fpath} ->\n{' ' * len('WARNING: copying: ')}{new_fpath}")
+            if not args.dryrun:
+                shutil.copyfile(fpath, new_fpath)
