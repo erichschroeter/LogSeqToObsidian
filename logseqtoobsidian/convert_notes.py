@@ -492,3 +492,111 @@ def copy_pages(
             logging.warning(f"copying: {fpath} ->\n{' ' * len('WARNING: copying: ')}{new_fpath}")
             if not args.dryrun:
                 shutil.copyfile(fpath, new_fpath)
+
+
+def convert_contents(
+    args,
+    new_paths: set,
+    old_pagenames_to_new_paths: dict,
+    new_to_old_paths: dict,
+):
+    global INSIDE_CODE_BLOCK
+    for fpath in new_paths:
+        newlines = []
+        with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+
+            # First replace the 'title:: my note' style of front matter with the Obsidian style (triple dashed)
+            front_matter = {}
+            in_front_matter = False
+            first_line_after_front_matter = 0
+            for idx, line in enumerate(lines):
+                match = re.match(r"(.*?)::[\s]*(.*)", line)
+                if match is not None:
+                    front_matter[match[1]] = match[2]
+                    first_line_after_front_matter = idx + 1
+                else:
+                    break
+            if bool(front_matter):
+                # import ipdb; ipdb.set_trace()
+                newlines.append("---\n")
+                for key in front_matter:
+                    if (
+                        key.find("tags") >= 0 or key.find("Tags") >= 0
+                    ) and args.tag_prop_to_taglist:
+                        # convert tags:: value1, #[[value 2]]
+                        # to
+                        # taglinks:
+                        #   - "[[value1]]"
+                        #   - "[[value 2]]"
+                        tags = front_matter[key].split(",")
+
+                        newlines.append("Taglinks:\n")
+                        for tag in tags:
+                            tag = tag.strip()
+                            clean_tag = tag.replace("#", "")
+                            clean_tag = clean_tag.replace("[[", "")
+                            clean_tag = clean_tag.replace("]]", "")
+
+                            newlines.append('  - "[[' + clean_tag + ']]"' + "\n")
+                    else:
+                        newlines.append(key + ": " + front_matter[key] + "\n")
+                newlines.append("---\n")
+
+            for line in lines[first_line_after_front_matter:]:
+                ORIGINAL_LINE = line
+
+                # Update global state if this is the end of a code block
+                if INSIDE_CODE_BLOCK and line == "```\n":
+                    INSIDE_CODE_BLOCK = False
+
+                # Ignore if the line if it's a collapsed:: true line
+                if is_collapsed_line(line):
+                    continue
+
+                # Convert empty lines in logseq to empty lines in Obsidian
+                line = convert_empty_line(line)
+
+                # Convert 2-4 spaces to a tab
+                line = convert_spaces_to_tabs(line)
+
+                # Unindent once if the user requested it
+                if args.unindent_once:
+                    line = unindent_once(line)
+
+                # Add a line above the start of a code block in a list
+                lines = prepend_code_block(line)
+                if len(lines) > 0:
+                    newlines.append(lines[0])
+                    line = lines[1]
+
+                # Update links and tags
+                line = update_links_and_tags(
+                    args, line, old_pagenames_to_new_paths, fpath
+                )
+
+                # Update assets
+                line = update_assets(line, new_to_old_paths[fpath], fpath)
+
+                # Update image dimensions
+                line = update_image_dimensions(line)
+
+                # Remove block links and embeds
+                line = remove_block_links_embeds(line)
+
+                # Self-explanatory
+                line = add_space_after_hyphen_that_ends_line(line)
+
+                # Self-explanatory
+                line = convert_todos(line)
+
+                # < and > need to be escaped to show up as normal characters in Obsidian
+                line = escape_lt_gt(line)
+
+                # Make sure images are indented correctly
+                line = add_bullet_before_indented_image(line)
+
+                newlines.append(line)
+
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.writelines(newlines)
