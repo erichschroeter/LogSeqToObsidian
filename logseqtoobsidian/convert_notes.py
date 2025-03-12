@@ -232,7 +232,9 @@ def update_assets(line: str, old_path: str, new_path: str):
         )
         new_asset_dir = os.path.dirname(new_asset_path)
         os.makedirs(new_asset_dir, exist_ok=True)
-        logging.debug(f"copying: {old_asset_path} ->\n{' ' * len('DEBUG: copying: ')}{new_asset_path}")
+        logging.debug(
+            f"copying: {old_asset_path} ->\n{' ' * len('DEBUG: copying: ')}{new_asset_path}"
+        )
         try:
             shutil.copyfile(old_asset_path, new_asset_path)
             new_relpath = os.path.relpath(new_asset_path, os.path.dirname(new_path))
@@ -247,7 +249,9 @@ def update_assets(line: str, old_path: str, new_path: str):
             new_relpath = old_relpath
             # import ipdb; ipdb.set_trace()
 
-        if os.path.splitext(old_asset_path)[1].lower() in [OBSIDIAN_ACCEPTED_FILE_FORMATS]:
+        if os.path.splitext(old_asset_path)[1].lower() in [
+            OBSIDIAN_ACCEPTED_FILE_FORMATS
+        ]:
             out.append("!")
         out.append("[" + name + "]")
         out.append("(" + new_relpath + ")")
@@ -434,7 +438,9 @@ def copy_journals(
                 else:
                     new_fpath = os.path.join(new_journals, fname)
 
-                logging.info(f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}")
+                logging.info(
+                    f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}"
+                )
                 if not args.dryrun:
                     shutil.copyfile(fpath, new_fpath)
                 old_to_new_paths[fpath] = new_fpath
@@ -472,7 +478,9 @@ def copy_pages(
             else:
                 new_fpath = os.path.join(new_base, *hierarchy)
                 new_fpath = fix_escapes(new_fpath)
-                logging.info(f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}")
+                logging.info(
+                    f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}"
+                )
                 new_dirname = os.path.split(new_fpath)[0]
                 if not args.dryrun:
                     os.makedirs(new_dirname, exist_ok=True)
@@ -489,7 +497,9 @@ def copy_pages(
                 ] = new_fpath
         else:  # copy non-markdown files verbatim
             new_fpath = os.path.join(new_base, os.path.basename(fpath))
-            logging.warning(f"copying: {fpath} ->\n{' ' * len('WARNING: copying: ')}{new_fpath}")
+            logging.warning(
+                f"copying: {fpath} ->\n{' ' * len('WARNING: copying: ')}{new_fpath}"
+            )
             if not args.dryrun:
                 shutil.copyfile(fpath, new_fpath)
 
