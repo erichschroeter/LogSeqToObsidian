@@ -79,7 +79,7 @@ class TestConvertNotes(unittest.TestCase):
             with open(asset_path, "w") as f:
                 f.write("image content")
             line = "![image](image.png)"
-            updated_line = update_assets(line, old_path, new_path)
+            updated_line = update_assets(line, old_path, new_path, assets_dir="attachments")
             self.assertIn("attachments/image.png", updated_line)
 
     def test_update_image_dimensions(self):

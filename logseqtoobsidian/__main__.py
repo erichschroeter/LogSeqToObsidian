@@ -48,6 +48,9 @@ def main():
         "--output", help="base directory where output should go", required=True
     )
     parser.add_argument(
+        "--assets_dir", help="directory where assets are copied", default="attachments", required=False
+    )
+    parser.add_argument(
         "--dryrun",
         help="don't actually do anything, just see what would happen",
         default=False,

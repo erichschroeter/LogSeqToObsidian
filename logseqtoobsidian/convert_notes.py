@@ -209,7 +209,7 @@ def update_links_and_tags(args, line: str, name_to_path: dict, curr_path: str) -
     return line
 
 
-def update_assets(line: str, old_path: str, new_path: str):
+def update_assets(line: str, old_path: str, new_path: str, assets_dir: str):
     """Updates embedded asset links and copies the asset
     Assets are copied to the 'attachments' subfolder under the same directory as new_path is in
     Images (.PNG, .JPG) are embedded. Everything else is linked to
@@ -228,7 +228,7 @@ def update_assets(line: str, old_path: str, new_path: str):
             os.path.join(os.path.dirname(old_path), old_relpath)
         )
         new_asset_path = os.path.join(
-            os.path.dirname(new_path), "attachments", os.path.basename(old_asset_path)
+            os.path.dirname(new_path), assets_dir, os.path.basename(old_asset_path)
         )
         new_asset_dir = os.path.dirname(new_asset_path)
         os.makedirs(new_asset_dir, exist_ok=True)
@@ -586,7 +586,7 @@ def convert_contents(
                 )
 
                 # Update assets
-                line = update_assets(line, new_to_old_paths[fpath], fpath)
+                line = update_assets(line, new_to_old_paths[fpath], fpath, args.assets_dir)
 
                 # Update image dimensions
                 line = update_image_dimensions(line)

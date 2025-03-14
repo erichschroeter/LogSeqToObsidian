@@ -63,7 +63,6 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "hls__file_with_underscores.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file_with_underscores.py")))
 
-    # @unittest.skip("focusing on fixing assets not copying")
     def test_logseq_highlights_files_exist(self):
         result = self.exec([
                 "python",
@@ -80,6 +79,22 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "hls__file_with_underscores.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file_with_underscores.py")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file.with.dots.md")))
+
+    def test_logseq_asset_files_exist(self):
+        result = self.exec([
+                "python",
+                "-m",
+                "logseqtoobsidian.__main__",
+                "--assets_dir",
+                "assets",
+                "--logseq",
+                self.logseq_dir,
+                "--output",
+                self.output_dir,
+            ])
+        self.assertEqual(result.returncode, 0)
+        self.assertTrue(os.path.exists(os.path.join(self.output_dir, "algorithms", "assets", "image_1688968010207_0.png")))
+        self.assertTrue(os.path.exists(os.path.join(self.output_dir, "algorithms", "assets", "image_1688968020649_0.png")))
 
 
 if __name__ == "__main__":
