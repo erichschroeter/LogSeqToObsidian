@@ -1,5 +1,16 @@
 # LogSeqToObsidian
 
+- [LogSeqToObsidian](#logseqtoobsidian)
+  - [Usage](#usage)
+    - [Arguments](#arguments)
+  - [Further information](#further-information)
+    - [Known assumptions:](#known-assumptions)
+    - [What this script does:](#what-this-script-does)
+    - [What this script does not do:](#what-this-script-does-not-do)
+    - [`bonofix-snippet.css`](#bonofix-snippetcss)
+    - [Potential future additions](#potential-future-additions)
+
+
 [LogSeq](https://logseq.com/) and [Obsidian](https://obsidian.md/): are two (awesome) note taking tools.
 
 I am a flawed human with a penchant for flitting between note taking apps.
@@ -7,41 +18,34 @@ I am a flawed human with a penchant for flitting between note taking apps.
 These: are a couple of files to help me migrate from LogSeq to Obsidian.
 
 > [!WARNING]
-> Please backup all of your files before trying the migration script on your own data. The script is highly experimental.**
+> Please backup all of your files before trying the migration script on your own data. The script is highly experimental.
 
-## `bonofix-snippet.css`
-
-A small CSS snippet to help Obsidian look more like a mix of the [LogSeq Bonofix Theme](https://github.com/Sansui233/logseq-bonofix-theme) and Typora.
-
-Install the Minimal theme, and then paste it in your snippets folder and enable it. Doesn't do much more than (what I consider) the basics - any contributions welcome.
-
-## `convert_notes.py`
+## Usage
 
 A basic Python script that converts LogSeq's markdown files to a style that plays nicer with Obsidian.
-
-### Usage
 
 ```shell
 python -m logseqtoobsidian --logseq /path/to/logseq/graph --output /path/to/output/folder
 ```
 
-#### Flags:
+### Arguments
 
-- Add the `--overwrite_output` flag if you want any existing folder at the output path to be overwritten
-- Add the `--unindent_once` flag if you want all lines to be unindented once. If you do this, the base level of indentation will be paragraph-style text with no bullet points
-- Add `--ignore_dot_for_namespaces` if you want to ignore the `.` character in determining namespace hierarchies - default behavior is to treat `.` characters in filenames as namespace delimiters in some cases
-- Add `--convert_tags_to_links` if you want to convert `#[[long tags]]` to `[[long tags]]` links and `#tags` to `[[tags]]` links - default behavior is to convert long tags to `#long_tags` tags and leave short tags alone
-- Add `--tag_prop_to_taglist` to convert front matter of the form `tags:: value1, #[[value 2]]` to `Taglinks:: [[value1]], [[value 2]]`. That is, the tags in the front matter will be converted to links and named 'Taglinks' instead of 'tags'
-- Add `--journal_dashes` if you want to use dashes in the filenames for journal pages, eg `2023-08-03.md` instead of `2023_08_03.md`
+- `--overwrite_output` flag if you want any existing folder at the output path to be overwritten
+- `--unindent_once` flag if you want all lines to be unindented once. If you do this, the base level of indentation will be paragraph-style text with no bullet points
+- `--ignore_dot_for_namespaces` if you want to ignore the `.` character in determining namespace hierarchies - default behavior is to treat `.` characters in filenames as namespace delimiters in some cases
+- `--convert_tags_to_links` if you want to convert `#[[long tags]]` to `[[long tags]]` links and `#tags` to `[[tags]]` links - default behavior is to convert long tags to `#long_tags` tags and leave short tags alone
+- `--tag_prop_to_taglist` to convert front matter of the form `tags:: value1, #[[value 2]]` to `Taglinks:: [[value1]], [[value 2]]`. That is, the tags in the front matter will be converted to links and named 'Taglinks' instead of 'tags'
+- `--journal_dashes` if you want to use dashes in the filenames for journal pages, eg `2023-08-03.md` instead of `2023_08_03.md`
+- `--assets_dir` if you want to change the directory name where assets are copied to
 
-### Further information
+## Further information
 
-#### Known assumptions:
+### Known assumptions:
 
 - Dots in the logseq filename are assumed to indicate namespaces
 - `<` and `>` characters are assumed to be part of text, and therefore escaped so that they display correctly in Obsidian
 
-#### What this script does:
+### What this script does:
 
 - Creates a folder/subfolder hierarchy based on namespaces, copies notes appropriately, and updates links between notes
 - Links to notes that have not yet been created are replaced with tags
@@ -61,7 +65,7 @@ python -m logseqtoobsidian --logseq /path/to/logseq/graph --output /path/to/outp
 - Use `--journal_dashes` to convert journal file entries from the format `Jan 2,2023.md` to the default Obsidian format `2023-01-02.md`
 - Any files found with a `%3A` in the name (html encoded colon character `:`) to a `.` character instead.
 
-#### What this script does not do:
+### What this script does not do:
 
 - Process page properties, and use them for finding namespaces
 - Get file copier to work with subfolders in logseq (right now only copies pages in the base directory)
@@ -70,7 +74,13 @@ python -m logseqtoobsidian --logseq /path/to/logseq/graph --output /path/to/outp
 - Embed PDF as option
 - Seems like asset names cannot have '%20' in them - is that right?
 
-### I might also like to do the below at some point
+### `bonofix-snippet.css`
+
+A small CSS snippet to help Obsidian look more like a mix of the [LogSeq Bonofix Theme](https://github.com/Sansui233/logseq-bonofix-theme) and Typora.
+
+Install the Minimal theme, and then paste it in your snippets folder and enable it. Doesn't do much more than (what I consider) the basics - any contributions welcome.
+
+### Potential future additions
 
 (That is, none of the below has been done)
 
@@ -79,7 +89,6 @@ First, a note on content reformatting. LogSeq and Obsidian both allow for header
 - All content will be outdented one level (since everything starts off as part of an outline in LogSeq)
 - Then, anything under a H2 header will be outdented another level.
 - Then, anything under a H3 header will be outdented another level.
-- Etc.
 
 As an example, if this is what your LogSeq note looks like:
 
