@@ -166,7 +166,7 @@ update.zsh
 venv/**
 
 playground/**
+example/logseq_vault/logseq/bak/**
 example/obsidian_output/**
 
 .DS_Store
-.vscode/launch.json

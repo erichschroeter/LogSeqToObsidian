@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 
 from logseqtoobsidian.convert_notes import (
     copy_journals,
+    get_markdown_file_properties,
     is_markdown_file,
     is_empty_markdown_file,
     get_namespace_hierarchy,
@@ -40,6 +41,14 @@ class TestConvertNotes(unittest.TestCase):
         self.assertTrue(is_empty_markdown_file(tmp_path))
         os.remove(tmp_path)
 
+    def test_get_markdown_file_properties(self):
+        with tempfile.NamedTemporaryFile(suffix=".md", delete=False) as tmp:
+            tmp.write(b"title:: An Example Title\n")
+            tmp.write(b"- Some text\n")
+            tmp_path = tmp.name
+        self.assertEqual(({"title": "An Example Title"}, 1), get_markdown_file_properties(tmp_path))
+        os.remove(tmp_path)
+
     def test_get_namespace_hierarchy_when_ignore_dot_for_namespace_false(self):
         args = Mock()
         args.ignore_dot_for_namespaces = False
@@ -70,7 +79,7 @@ class TestConvertNotes(unittest.TestCase):
             with open(asset_path, "w") as f:
                 f.write("image content")
             line = "![image](image.png)"
-            updated_line = update_assets(line, old_path, new_path)
+            updated_line = update_assets(line, old_path, new_path, assets_dir="attachments")
             self.assertIn("attachments/image.png", updated_line)
 
     def test_update_image_dimensions(self):
@@ -143,6 +152,7 @@ class TestUpdateLinksAndTags(unittest.TestCase):
     def setUp(self):
         self.args = type("", (), {})()  # Create a simple object to hold arguments
         self.args.convert_tags_to_links = False
+        self.args.dryrun = False
         self.name_to_path = {
             "This/Type/OfLink": "/path/to/This/Type/OfLink",
             "Another/Link": "/path/to/Another/Link",
@@ -235,6 +245,7 @@ class TestCopyJournals(unittest.TestCase):
     def setUp(self):
         self.args = type('', (), {})()  # Create a simple object to hold arguments
         self.args.journal_dashes = False
+        self.args.dryrun = False
         self.old_journals = "old_journals"
         self.new_journals = "new_journals"
         self.old_to_new_paths = {}

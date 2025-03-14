@@ -9,6 +9,31 @@ import typing
 # Global state isn't always bad mmkay
 ORIGINAL_LINE = ""
 INSIDE_CODE_BLOCK = False
+OBSIDIAN_ACCEPTED_FILE_FORMATS = [
+    # ".md",
+    ".canvas",
+    ".avif",
+    ".bmp",
+    ".gif",
+    ".jpeg",
+    ".jpg",
+    ".png",
+    ".svg",
+    ".webp",
+    ".flac",
+    ".m4a",
+    ".mp3",
+    ".ogg",
+    ".wav",
+    ".webm",
+    ".3gp",
+    ".mkv",
+    ".mov",
+    ".mp4",
+    ".ogv",
+    ".webm",
+    ".pdf",
+]
 
 
 def is_markdown_file(fpath: str) -> bool:
@@ -41,8 +66,24 @@ def get_markdown_file_properties(fpath: str) -> tuple[dict, int]:
         title: test
         ---
     """
+    properties = {}
+    first_line_after = 0
 
-    raise NotImplementedError()
+    with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+        lines = f.readlines()
+
+        # Check for Logseq-style properties (key:: value)
+        for idx, line in enumerate(lines):
+            match = re.match(r"(.*?)::[\s]*(.*)", line)
+            if match is not None:
+                key = match[1].strip()
+                value = match[2].strip()
+                properties[key] = value
+                first_line_after = idx + 1
+            else:
+                break
+
+    return properties, first_line_after
 
 
 def get_namespace_hierarchy(args, fname: str) -> list[str]:
@@ -168,7 +209,7 @@ def update_links_and_tags(args, line: str, name_to_path: dict, curr_path: str) -
     return line
 
 
-def update_assets(line: str, old_path: str, new_path: str):
+def update_assets(line: str, old_path: str, new_path: str, assets_dir: str):
     """Updates embedded asset links and copies the asset
     Assets are copied to the 'attachments' subfolder under the same directory as new_path is in
     Images (.PNG, .JPG) are embedded. Everything else is linked to
@@ -187,13 +228,13 @@ def update_assets(line: str, old_path: str, new_path: str):
             os.path.join(os.path.dirname(old_path), old_relpath)
         )
         new_asset_path = os.path.join(
-            os.path.dirname(new_path), "attachments", os.path.basename(old_asset_path)
+            os.path.dirname(new_path), assets_dir, os.path.basename(old_asset_path)
         )
         new_asset_dir = os.path.dirname(new_asset_path)
         os.makedirs(new_asset_dir, exist_ok=True)
-        logging.debug("Old note path: " + old_path)
-        logging.debug("Old asset path: " + old_asset_path)
-        logging.debug("New asset path: " + new_asset_path)
+        logging.debug(
+            f"copying: {old_asset_path} ->\n{' ' * len('DEBUG: copying: ')}{new_asset_path}"
+        )
         try:
             shutil.copyfile(old_asset_path, new_asset_path)
             new_relpath = os.path.relpath(new_asset_path, os.path.dirname(new_path))
@@ -209,10 +250,7 @@ def update_assets(line: str, old_path: str, new_path: str):
             # import ipdb; ipdb.set_trace()
 
         if os.path.splitext(old_asset_path)[1].lower() in [
-            ".png",
-            ".jpg",
-            ".jpeg",
-            ".gif",
+            OBSIDIAN_ACCEPTED_FILE_FORMATS
         ]:
             out.append("!")
         out.append("[" + name + "]")
@@ -391,7 +429,6 @@ def copy_journals(
 ):
     for fname in os.listdir(old_journals):
         fpath = os.path.join(old_journals, fname)
-        logging.info("Now copying the journal page: " + fpath)
         if os.path.isfile(fpath):
             if not is_empty_markdown_file(fpath):
                 new_fpath = new_journals
@@ -401,8 +438,11 @@ def copy_journals(
                 else:
                     new_fpath = os.path.join(new_journals, fname)
 
-                logging.info(f'copying "{fpath}" to "{new_fpath}"')
-                shutil.copyfile(fpath, new_fpath)
+                logging.info(
+                    f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}"
+                )
+                if not args.dryrun:
+                    shutil.copyfile(fpath, new_fpath)
                 old_to_new_paths[fpath] = new_fpath
                 new_to_old_paths[new_fpath] = fpath
                 new_paths.add(new_fpath)
@@ -414,3 +454,159 @@ def copy_journals(
                     old_pagenames_to_new_paths[newfile.replace("_", "-")] = new_fpath
             else:
                 pages_that_were_empty.add(fname)
+        else:
+            logging.info(f"not copying: {fpath}")
+
+
+def copy_pages(
+    args,
+    old_pages: str,
+    new_base: str,
+    old_to_new_paths: dict,
+    new_to_old_paths: dict,
+    new_paths: set,
+    pages_that_were_empty: dict,
+    old_pagenames_to_new_paths: dict,
+):
+    for fname in os.listdir(old_pages):
+        fpath = os.path.join(old_pages, fname)
+        if os.path.isfile(fpath) and is_markdown_file(fpath):
+            hierarchy = get_namespace_hierarchy(args, fname)
+            hierarchical_pagename = "/".join(hierarchy)
+            if is_empty_markdown_file(fpath):
+                pages_that_were_empty.add(fname)
+            else:
+                new_fpath = os.path.join(new_base, *hierarchy)
+                new_fpath = fix_escapes(new_fpath)
+                logging.info(
+                    f"copying: {fpath} ->\n{' ' * len('INFO: copying: ')}{new_fpath}"
+                )
+                new_dirname = os.path.split(new_fpath)[0]
+                if not args.dryrun:
+                    os.makedirs(new_dirname, exist_ok=True)
+                    shutil.copyfile(fpath, new_fpath)
+                old_to_new_paths[fpath] = new_fpath
+                new_to_old_paths[new_fpath] = fpath
+                new_paths.add(new_fpath)
+
+                old_pagename = os.path.splitext(hierarchical_pagename)[0]
+                old_pagenames_to_new_paths[old_pagename] = new_fpath
+                # Add mapping of unencoded filename for links
+                old_pagenames_to_new_paths[
+                    unencode_filenames_for_links(old_pagename)
+                ] = new_fpath
+        else:  # copy non-markdown files verbatim
+            new_fpath = os.path.join(new_base, os.path.basename(fpath))
+            logging.warning(
+                f"copying: {fpath} ->\n{' ' * len('WARNING: copying: ')}{new_fpath}"
+            )
+            if not args.dryrun:
+                shutil.copyfile(fpath, new_fpath)
+
+
+def convert_contents(
+    args,
+    new_paths: set,
+    old_pagenames_to_new_paths: dict,
+    new_to_old_paths: dict,
+):
+    global INSIDE_CODE_BLOCK
+    for fpath in new_paths:
+        newlines = []
+        with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+
+            # First replace the 'title:: my note' style of front matter with the Obsidian style (triple dashed)
+            front_matter = {}
+            in_front_matter = False
+            first_line_after_front_matter = 0
+            for idx, line in enumerate(lines):
+                match = re.match(r"(.*?)::[\s]*(.*)", line)
+                if match is not None:
+                    front_matter[match[1]] = match[2]
+                    first_line_after_front_matter = idx + 1
+                else:
+                    break
+            if bool(front_matter):
+                # import ipdb; ipdb.set_trace()
+                newlines.append("---\n")
+                for key in front_matter:
+                    if (
+                        key.find("tags") >= 0 or key.find("Tags") >= 0
+                    ) and args.tag_prop_to_taglist:
+                        # convert tags:: value1, #[[value 2]]
+                        # to
+                        # taglinks:
+                        #   - "[[value1]]"
+                        #   - "[[value 2]]"
+                        tags = front_matter[key].split(",")
+
+                        newlines.append("Taglinks:\n")
+                        for tag in tags:
+                            tag = tag.strip()
+                            clean_tag = tag.replace("#", "")
+                            clean_tag = clean_tag.replace("[[", "")
+                            clean_tag = clean_tag.replace("]]", "")
+
+                            newlines.append('  - "[[' + clean_tag + ']]"' + "\n")
+                    else:
+                        newlines.append(key + ": " + front_matter[key] + "\n")
+                newlines.append("---\n")
+
+            for line in lines[first_line_after_front_matter:]:
+                ORIGINAL_LINE = line
+
+                # Update global state if this is the end of a code block
+                if INSIDE_CODE_BLOCK and line == "```\n":
+                    INSIDE_CODE_BLOCK = False
+
+                # Ignore if the line if it's a collapsed:: true line
+                if is_collapsed_line(line):
+                    continue
+
+                # Convert empty lines in logseq to empty lines in Obsidian
+                line = convert_empty_line(line)
+
+                # Convert 2-4 spaces to a tab
+                line = convert_spaces_to_tabs(line)
+
+                # Unindent once if the user requested it
+                if args.unindent_once:
+                    line = unindent_once(line)
+
+                # Add a line above the start of a code block in a list
+                lines = prepend_code_block(line)
+                if len(lines) > 0:
+                    newlines.append(lines[0])
+                    line = lines[1]
+
+                # Update links and tags
+                line = update_links_and_tags(
+                    args, line, old_pagenames_to_new_paths, fpath
+                )
+
+                # Update assets
+                line = update_assets(line, new_to_old_paths[fpath], fpath, args.assets_dir)
+
+                # Update image dimensions
+                line = update_image_dimensions(line)
+
+                # Remove block links and embeds
+                line = remove_block_links_embeds(line)
+
+                # Self-explanatory
+                line = add_space_after_hyphen_that_ends_line(line)
+
+                # Self-explanatory
+                line = convert_todos(line)
+
+                # < and > need to be escaped to show up as normal characters in Obsidian
+                line = escape_lt_gt(line)
+
+                # Make sure images are indented correctly
+                line = add_bullet_before_indented_image(line)
+
+                newlines.append(line)
+
+        with open(fpath, "w", encoding="utf-8") as f:
+            f.writelines(newlines)
