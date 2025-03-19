@@ -57,6 +57,7 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "2023_12_02.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "2023_12_03.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "attachments", "image_(1)_with_parentheses_1742412639003_0.png")))
+        self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "attachments", "image.with.dots_1742414159033_0.png")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "leetcode", "BFS.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "leetcode", "dynamic programming.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file", "with", "dots.md")))
