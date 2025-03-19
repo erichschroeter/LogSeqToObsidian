@@ -56,6 +56,7 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "2023_08_03.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "2023_12_02.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "2023_12_03.md")))
+        self.assertTrue(os.path.exists(os.path.join(self.output_dir, "journals", "attachments", "image_(1)_with_parentheses_1742412639003_0.png")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "leetcode", "BFS.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "leetcode", "dynamic programming.md")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file", "with", "dots.md")))
@@ -80,7 +81,7 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file_with_underscores.py")))
         self.assertTrue(os.path.exists(os.path.join(self.output_dir, "file.with.dots.md")))
 
-    def test_logseq_asset_files_exist(self):
+    def test_files_exists_with_assets_dir(self):
         result = self.exec([
                 "python",
                 "-m",
