@@ -240,11 +240,9 @@ def update_assets(line: str, old_path: str, new_path: str, assets_dir: str):
             new_relpath = os.path.relpath(new_asset_path, os.path.dirname(new_path))
         except FileNotFoundError:
             logging.warning(
-                "Warning: copying the asset from "
-                + old_asset_path
-                + " to "
-                + new_asset_path
-                + " failed, skipping it"
+                "copying asset failed, skipping it:\n"
+                + f"{' ' * len('WARNING: copying: ')}{old_asset_path} ->\n"
+                + f"{' ' * len('WARNING: copying: ')}{new_asset_path}"
             )
             new_relpath = old_relpath
             # import ipdb; ipdb.set_trace()
@@ -258,7 +256,7 @@ def update_assets(line: str, old_path: str, new_path: str, assets_dir: str):
 
         return "".join(out)
 
-    line = re.sub(r"!\[(.*?)]\((.*)\)", fix_asset_embed, line)
+    line = re.sub(r"!\[(.*?)]\((.*?)\)", fix_asset_embed, line)
 
     return line
 
